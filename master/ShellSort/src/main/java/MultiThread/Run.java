@@ -5,6 +5,7 @@ import java.lang.reflect.Array;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class Run {
     private  int threads;
@@ -12,14 +13,20 @@ public class Run {
 
    public Run(int threads){
         this.threads = threads;
-        execut = Executors.newFixedThreadPool(threads);
+
     }
 
-    public void sort(int[] array){
-
+    public int[] sort(int[] array) throws InterruptedException {
+        while(array.length % threads != 0 )
+        {
+            threads--;
+        }
         OneThread[] thread = new OneThread[threads];
+        int size = array.length/threads;
         for(int i=0; i<thread.length;i++){
-            int size = array.length/threads;
+
+            execut = Executors.newFixedThreadPool(threads);
+
             int begin = size *i;
             int end = ((i+1) * size);
             if((array.length-end) < size){
@@ -30,15 +37,12 @@ public class Run {
         for (OneThread a:thread){
             execut.execute(a);
         }
+
         execut.shutdown();
+        execut.awaitTermination(10, TimeUnit.SECONDS);
         System.arraycopy(merge(array,thread) ,0,array,0,array.length);
-
-
-
-
-
-
-    }
+        return array;
+   }
 
     private  int[] merge(int[] array, OneThread[] thread){
         int[] arr = new int[array.length];
